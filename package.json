@@ -1,0 +1,35 @@
+{
+  "name": "@smile/strapi-content-type-to-ts",
+  "version": "1.0.0",
+  "description": "A script to generate TypeScript types (intended to be used for API calls) from Strapi content types schemas",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "tsc || true",
+    "postversion": "git push && git push --tags"
+  },
+  "bin": {
+    "strapi-content-type-to-ts": "bin/strapi-content-type-to-ts"
+  },
+  "files": [
+    "bin/**/*",
+    "dist/**/*"
+  ],
+  "keywords": ["Strapi", "content-type", "typescript", "ts"],
+  "author": "Maxime Robert <marob@smile.fr>",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^10.0.0",
+    "node-dir": "^0.1.17"
+  },
+  "devDependencies": {
+    "@types/node-dir": "0.0.34",
+    "typescript": "5.0.3"
+  },
+  "peerDependencies": {
+    "@strapi/strapi": "*"
+  },
+  "engines": {
+    "node": ">=14.19.1 <=18.x.x",
+    "npm": ">=6.0.0"
+  }
+}
