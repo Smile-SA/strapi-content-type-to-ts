@@ -8,7 +8,7 @@ A script to generate TypeScript types (intended to be used for API calls) from S
 
 In your strapi project.
 
-### Add the dependency:
+### Add the dependency
 
 ```shell
 npm i -D @smile/strapi-content-type-to-ts
