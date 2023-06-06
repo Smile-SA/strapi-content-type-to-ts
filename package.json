@@ -16,6 +16,8 @@
   ],
   "keywords": ["Strapi", "content-type", "typescript", "ts"],
   "author": "Maxime Robert <marob@smile.fr>",
+  "repository": "github:Smile-SA/strapi-content-type-to-ts",
+  "homepage": "https://github.com/Smile-SA/strapi-content-type-to-ts",
   "license": "MIT",
   "dependencies": {
     "commander": "^10.0.0",
