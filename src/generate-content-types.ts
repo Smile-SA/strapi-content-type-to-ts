@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as dir from 'node-dir';
+import {globSync} from 'glob';
 import {program} from 'commander';
 import {ContentTypeSchema} from '@strapi/strapi/lib/types/core/schemas';
 import {Attribute, AttributeType, BasicRelationsType} from '@strapi/strapi';
@@ -129,8 +129,8 @@ module.exports = function (options) {
     }
 }
 
-function notStrapiRootDirectoryError() {
-    console.error(`Directory ${path.resolve(options.strapiRootDirectory)} doesn't look like a Strapi root directory. Try to configure it with --strapi-root-directory <path>`);
+function notStrapiRootDirectoryError(e?: unknown) {
+    console.error(`Directory ${path.resolve(options.strapiRootDirectory)} doesn't look like a Strapi root directory. Try to configure it with --strapi-root-directory <path>`, e);
     return process.exit(1);
 }
 
@@ -145,19 +145,18 @@ function getSrcPath() {
 function getApiFiles(): string[] {
     try {
         const apiDir = path.resolve(path.join(srcPath, 'api'));
-        return dir.files(apiDir, {sync: true}).filter(file => /schema.json$/.test(file));
+        return globSync('**/schema.json', {cwd: apiDir, absolute: true});
     } catch (e) {
-        return notStrapiRootDirectoryError();
+        return notStrapiRootDirectoryError(e);
     }
 }
 
 function getComponentsFiles() {
     try {
         const componentsDir = path.resolve(path.join(srcPath, 'components'));
-        return dir.files(componentsDir, {sync: true}).filter(file => /.json$/.test(file));
+        return globSync('**/*.json', {cwd: componentsDir, absolute: true});
     } catch (e) {
-        console.log('components', e);
-        return notStrapiRootDirectoryError();
+        return notStrapiRootDirectoryError(e);
     }
 }
 
