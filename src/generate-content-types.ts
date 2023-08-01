@@ -26,34 +26,75 @@ const outFile = options.out ? fs.createWriteStream(options.out) : undefined;
 const apiFiles = getApiFiles();
 const componentsFiles = getComponentsFiles();
 
+const PARENTS_INTERFACES = {
+    DraftAndPublish: `interface DraftAndPublish {
+  /**
+   * If set to a date, content will be published, at creation, with the corresponding publication date.
+   * If not set (undefined), content will be published, at creation, with the date corresponding to the content creation date.
+   * If set to null, content will be created in Draft.
+   **/
+  publishedAt?: Date | null;
+}\n\n`
+};
+
 (async () => {
-    for (const file of [...apiFiles, ...componentsFiles]) {
+    const interfaces = await computeInterfaces();
+
+    const usedParentInterfacesCode = Array.from(new Set(interfaces.flatMap(i => i.implementedInterfaces))).map(ii => PARENTS_INTERFACES[ii]);
+    const interfacesToExportCode = interfaces
+        .filter(i => i.interfaceName)
+        .sort((i1, i2) => (i1.interfaceName as string).localeCompare(i2.interfaceName as string))
+        .map(i =>
+            `\
+export interface ${i.interfaceName}${i.implementedInterfaces.length ? ` extends ${i.implementedInterfaces.join(', ')}` : ''} {
+${i.properties.map(p => `  ${p.name}${p.required ? '' : '?'}: ${p.type};`).join('\n')}
+}\n\n`);
+
+    [...usedParentInterfacesCode, ...interfacesToExportCode].forEach(code => {
+        outFile ? outFile.write(code) : process.stdout.write(code);
+    })
+})();
+
+async function computeInterfaces() {
+    return await Promise.all([...apiFiles, ...componentsFiles].map(async file => {
         const schema: ContentTypeSchema = JSON.parse(fs.readFileSync(file).toString());
 
         const [_, strapiComponentCategory, strapiComponentName] = /components\/([^\/]*)\/(.*)\.json/.exec(file) || [];
 
         const isComponent = strapiComponentCategory && strapiComponentName;
-        const interfaceName = schema.info.singularName
+        const interfaceName: string | undefined = schema.info.singularName
             ? toComponentType(schema.info.singularName)
             : isComponent
                 ? `${capitalizeFirstLetter(strapiComponentCategory)}${toComponentType(strapiComponentName)}`
-                : console.error(`Unexpected schema: ${file}`);
-        const __componentProperty = isComponent ? `  __component?: '${strapiComponentCategory}.${strapiComponentName}'\n` : '';
-        const properties = (await Promise.all(Object.entries(schema.attributes).map(async ([propertyName, schemaAttribute]) => {
-            const required = (schemaAttribute as RequiredOption)['required'];
-            const propertyType = await getPropertyType(schemaAttribute);
-            return `  ${propertyName}${required ? '' : '?'}: ${propertyType!};`;
-        })));
+                : (() => {
+                    console.error(`Unexpected schema: ${file}`);
+                    return ''
+                })();
+        const properties = (await Promise.all(Object.entries(schema.attributes).map(async ([propertyName, schemaAttribute]) => ({
+            name: propertyName,
+            required: (schemaAttribute as RequiredOption)['required'],
+            type: (await getPropertyType(schemaAttribute))!,
+        }))));
+        if (isComponent) {
+            properties.unshift({
+                name: '__component',
+                required: false,
+                type: `'${strapiComponentCategory}.${strapiComponentName}'`,
+            })
+        }
 
-        const code = `\
-export interface ${interfaceName} {
-${__componentProperty}\
-${properties.join('\n')}
-}\n\n`;
+        const implementedInterfaces: (keyof typeof PARENTS_INTERFACES)[] = [];
+        if (!!schema.options?.draftAndPublish) {
+            implementedInterfaces.push('DraftAndPublish');
+        }
 
-        outFile ? outFile.write(code) : process.stdout.write(code);
-    }
-})();
+        return {
+            interfaceName,
+            implementedInterfaces,
+            properties
+        }
+    }));
+}
 
 /**
  * Computes the property type from the Strapi schema attribute.
@@ -164,6 +205,6 @@ function capitalizeFirstLetter(string?: string) {
     return string ? string.charAt(0).toUpperCase() + string.slice(1) : string;
 }
 
-function toComponentType(componentName: string | undefined) {
+function toComponentType(componentName: string | undefined): string | undefined {
     return componentName ? componentName.split(/[.-]/)?.map(v => capitalizeFirstLetter(v))?.join('') : componentName;
 }
