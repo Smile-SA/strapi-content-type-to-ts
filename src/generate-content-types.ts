@@ -111,7 +111,7 @@ async function getPropertyType(schemaAttribute: Attribute): Promise<string> {
             const customField = valueCustomField.customField.replace(/^plugin::/, '');
             const options = valueCustomField.options;
 
-            const customFieldPluginPath = path.resolve(process.cwd(), `./${customFieldsExtensionDirectory}/${customField}.js`);
+            const customFieldPluginPath = path.resolve(path.isAbsolute(customFieldsExtensionDirectory) ? customFieldsExtensionDirectory : path.resolve(process.cwd(), `./${customFieldsExtensionDirectory}`), `${customField}.js`);
             try {
                 return (await import(customFieldPluginPath))(options);
             } catch (e) {
