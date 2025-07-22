@@ -114,11 +114,11 @@ async function getPropertyType(schemaAttribute: Attribute): Promise<string> {
         case 'richtext':
         case 'password':
         case 'uid':
+        case 'date': // A date (without time) should be of the form 'YYYY-MM-DD'
+        case 'time': // A time should be of the form 'HH:mm:ss.SSS'
             return 'string';
-        case 'date':
         case 'datetime':
-        case 'time':
-            return 'Date';
+          return 'Date';
         case 'boolean':
             return 'boolean';
         case 'enumeration':
