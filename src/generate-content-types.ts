@@ -75,13 +75,6 @@ async function computeInterfaces() {
             required: (schemaAttribute as RequiredOption)['required'],
             type: (await getPropertyType(schemaAttribute))!,
         }))));
-        if (isComponent) {
-            properties.unshift({
-                name: '__component',
-                required: false,
-                type: `'${strapiComponentCategory}.${strapiComponentName}'`,
-            })
-        }
 
         const implementedInterfaces: (keyof typeof PARENTS_INTERFACES)[] = [];
         if (!!schema.options?.draftAndPublish) {
