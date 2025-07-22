@@ -1,6 +1,6 @@
 {
   "name": "@smile/strapi-content-type-to-ts",
-  "version": "1.2.0",
+  "version": "5.0.0",
   "description": "A script to generate TypeScript types (intended to be used for API calls) from Strapi content types schemas",
   "scripts": {
     "prepare": "npm run build",
